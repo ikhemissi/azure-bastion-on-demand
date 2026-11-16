@@ -1,6 +1,6 @@
 # Reaching private Azure resources from your laptop
 
-**Question:** Which way into a virtual network, Azure Bastion Developer with a jumpbox or Azure Bastion Standard on demand with native-client tunnels, lets a developer use private resources (private DNS, kubectl, azd deploy, private web apps and data services) securely, at the lowest cost and effort?
+**Question:** Can Azure Bastion Standard, created on demand and deleted automatically when its time is up, give a developer secure access from their laptop to private resources in a virtual network (private DNS, kubectl, azd deploy, private web apps and data services) at a low cost?
 
 **Time box:** 4 phases, stop and report after each · **Status:** in progress
 

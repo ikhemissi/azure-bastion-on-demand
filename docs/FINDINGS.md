@@ -8,7 +8,7 @@ TODO: three to five sentences a busy reader can act on.
 
 ## Answers
 
-### Q1 — Which way into a virtual network, Azure Bastion Developer with a jumpbox or Azure Bastion Standard on demand with native-client tunnels, lets a developer use private resources (private DNS, kubectl, azd deploy, private web apps and data services) securely, at the lowest cost and effort?
+### Q1 — Can Azure Bastion Standard, created on demand and deleted automatically when its time is up, give a developer secure access from their laptop to private resources in a virtual network (private DNS, kubectl, azd deploy, private web apps and data services) at a low cost?
 
 TODO: the answer in one paragraph, with links to the experiments that support it (`[03](experiments/03-<slug>.md)`).
 
