@@ -1,6 +1,6 @@
-# The permanent part of Azure Bastion: its public IP (Standard, static) in the AzureBastionSubnet's network. The host
-# itself and the session's NAT Gateway are created and deleted by scripts (docs/DECISIONS.md D2, D6); their names are
-# outputs so that the scripts and the reaper agree on them.
+# The permanent parts of a session: the public IPs (Standard, static) of the Bastion host and of the jumpbox's NAT
+# Gateway. The host and the NAT Gateway themselves are created and deleted by scripts (docs/DECISIONS.md D2, D6); their
+# names are outputs so that the scripts and the reaper agree on them.
 
 resource "azurerm_public_ip" "bastion" {
   name                = "pip-bastion-${var.environment_name}"
@@ -17,6 +17,20 @@ resource "azurerm_public_ip" "bastion" {
   }
 }
 
+resource "azurerm_public_ip" "nat" {
+  name                = "pip-nat-jumpbox-${var.environment_name}"
+  resource_group_name = azurerm_resource_group.main.name
+  location            = var.location
+  allocation_method   = "Static"
+  sku                 = "Standard"
+  tags                = local.tags
+
+  lifecycle {
+    ignore_changes = [ip_tags]
+  }
+}
+
 output "BASTION_NAME" { value = "bas-${var.environment_name}" }
 output "BASTION_PUBLIC_IP_NAME" { value = azurerm_public_ip.bastion.name }
 output "NAT_GATEWAY_NAME" { value = "ng-jumpbox-${var.environment_name}" }
+output "NAT_PUBLIC_IP_NAME" { value = azurerm_public_ip.nat.name }

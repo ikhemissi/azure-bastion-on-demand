@@ -11,3 +11,6 @@ __pycache__/
 *.pfx
 # Local files from fast-start, never committed
 .fast-start/
+
+# SSH key, Entra certificate and configuration written by scripts/bastion-tunnel.sh
+.ssh/
