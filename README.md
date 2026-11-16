@@ -13,7 +13,7 @@
 
 </div>
 
-> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phase 1 (the base: network, jumpbox, private targets) is deployed and checked; the on-demand Bastion and the reaper come next ([verification](docs/verification.md)).
+> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phases 1 and 2 (the base, and sessions on demand from the laptop) are deployed and checked; the reaper comes next ([verification](docs/verification.md)).
 
 ## Why this sample
 
@@ -46,7 +46,6 @@ flowchart LR
 
 ## Daily use
 
-Available from phase 2:
 
 ```bash
 make bastion-up                 # creates the Bastion host and the NAT Gateway, starts the jumpbox; deleted 8 hours later

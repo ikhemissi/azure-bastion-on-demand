@@ -44,5 +44,6 @@ infrastructure or services: it lists pitfalls known for this kind of project.
 - A container image pinned by digest must use a digest the registry resolves: take it from a pull (`podman pull`, then `podman image inspect`), not from a `HEAD` request with an index `Accept` header (the registry answered `MANIFEST_UNKNOWN`).
 - Some tenants add IP tags to new public IP addresses; Terraform then wants to replace them: `ignore_changes = [ip_tags]`.
 - `az network bastion ssh` failing with `No module named 'rpds.rpds'`: the laptop's `bastion` or `ssh` CLI extension no longer loads after a CLI upgrade; `az extension remove -n <name> && az extension add -n <name>`.
+- `az network bastion delete` asks for confirmation and, without a terminal, cancels ("Operation cancelled"): pass `--yes`.
 - `az vm run-command` keeps running on the VM after the local command is stopped, and starts scripts without `$HOME`.
 Add a pitfall here every time something bites you, in one line: the symptom, then what to do.
