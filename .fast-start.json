@@ -10,18 +10,16 @@
     "azure-root",
     "monitoring",
     "container-apps-environment",
-    "container-registry",
     "key-vault"
   ],
   "modules": [
     "monitoring",
     "container-apps-environment",
-    "container-registry",
     "key-vault"
   ],
   "answers": {
-    "project_name": "azure-private-access",
-    "title": "Reaching private Azure resources from your laptop",
+    "project_name": "azure-bastion-on-demand",
+    "title": "Private Azure resources from your laptop, with Bastion on demand",
     "question": "Which way into a virtual network, Azure Bastion Developer with a jumpbox or Azure Bastion Standard on demand with native-client tunnels, lets a developer use private resources (private DNS, kubectl, azd deploy, private web apps and data services) securely, at the lowest cost and effort?",
     "time_box": "4 phases, stop and report after each",
     "azure_stack": false,
@@ -31,7 +29,7 @@
     "notes_mcp": false,
     "chat_ui": false,
     "foundry_agents": false,
-    "environment": "access-dev",
+    "environment": "bastion-dev",
     "location": "francecentral",
     "author": "Iheb Khemissi"
   }

@@ -1,8 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
-name: azure-private-access
+name: azure-bastion-on-demand
 
 # One Terraform root (infra/): each file is one part of the architecture, built from the modules in infra/modules;
-# connections.tf wires the optional parts together. Put the spike's own resources in a new file of infra/.
+# connections.tf wires the optional parts together. Put the sample's own resources in a new file of infra/.
 infra:
   provider: terraform
   path: infra

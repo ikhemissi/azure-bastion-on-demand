@@ -1,29 +1,24 @@
-# AGENTS.md — Reaching private Azure resources from your laptop
+# AGENTS.md — Private Azure resources from your laptop, with Bastion on demand
 
-This repository is a **spike**: it answers questions by experiment, within a time box (4 phases, stop and report after each). Nothing here is production code. Read [README.md](README.md) for the questions and the status.
+This repository is a **public sample**: an Azure Bastion that exists only while you use it, a jumpbox, private endpoints to reach, and a function that deletes the Bastion when its time is up. Read [README.md](README.md) first, then [docs/DECISIONS.md](docs/DECISIONS.md).
 
-## How the spike works
+## How the sample is built
 
-- **Questions first:** [docs/QUESTIONS.md](docs/QUESTIONS.md) lists what we want to know. Every experiment answers at least one question; a question can need several experiments.
-- **One experiment, one file:** `docs/experiments/NN-<slug>.md` from [the template](docs/experiments/TEMPLATE.md): goal, setup, steps, result, evidence (commands, outputs, screenshots, queries), conclusion. Number them in the order they run; never renumber.
-- **Evidence over opinion:** record what was observed, with the date and the versions involved. Products change: a result without a date and a version cannot be retested.
-- **Findings:** [docs/FINDINGS.md](docs/FINDINGS.md) answers each question in one paragraph, with links to the experiments. Update it after every experiment, and the "Key findings" of the README (one line per question) with it. Keep the README's setup diagram in step with the infrastructure.
-- **Retest plan:** [docs/RETEST-PLAN.md](docs/RETEST-PLAN.md) lists what to run again when a product or a version changes.
-- **Demo:** [docs/DEMO-RUNBOOK.md](docs/DEMO-RUNBOOK.md) is the step-by-step script for showing the results, written for someone else to run.
-- **Time box:** when it runs out, stop and write the findings, including "unanswered" with what blocked it.
-- **Ask before deciding** when a choice changes what the spike can conclude; propose a default.
+- **Phases:** (1) the base: network, jumpbox, private targets; (2) Bastion on demand and what works from the laptop; (3) the reaper function; (4) measurements and documentation. Stop and report after each.
+- **Evidence over opinion:** what was checked, how and when goes to [docs/verification.md](docs/verification.md), with the date and the versions. The README states only what was verified, or says "expected" and why.
+- **Decisions:** a choice someone could question goes to [docs/DECISIONS.md](docs/DECISIONS.md), with its reason; a changed decision is a new line that supersedes the old one.
+- **Ask before deciding** anything that changes the design, the cost or the security model; propose a default.
 
 ## Rules
 
 - **Never commit secrets**, keys, tokens, tenant or subscription IDs, or real user data. Use your own Entra identity (Azure CLI) and managed identities; local settings go to `.env` (git-ignored).
-- **Generalize what you write:** the findings may be shared; customer, employer-internal and personal details stay out.
-- Code is throwaway but must stay readable by another developer: small scripts in `src/`, one per experiment when useful, named after it (`src/03_call_with_obo.py`), each with a one-line purpose at the top, explicit names, no clever tricks, settings from the environment.
-- **Commits:** conventional commits (`docs(experiment): 03 …`, `feat(spike): …`), ending with the trailer `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`.
+- **Public content:** generalized and factual; customer, employer-internal and personal details stay out.
+- **Commits:** conventional commits (`feat(infra): …`, `feat(reaper): …`, `docs: …`), ending with the trailer `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`.
 - **At the end:** harvest the reusable learnings into the knowledge base (pitfalls, findings, decisions), generalized.
 
 ## Infrastructure
 
-- **One Terraform root** (`infra/`, one state), one file per part of the architecture. The files from shared building blocks (`container-apps-environment.tf`, `container-registry.tf`, `key-vault.tf`, `monitoring.tf`, `main.tf`, `providers.tf`, …), the modules in `infra/modules/` and the hook steps in `infra/hooks/<event>/` stay as they are, so that their improvements can be merged in later. Put the spike's own resources in a new file of `infra/` (calling a module of `infra/modules/` where one fits), its settings as variables mapped in `infra/main.tfvars.json`, its outputs as azd values, and its steps in `infra/hooks/<event>/NN-<name>.sh`.
+- **One Terraform root** (`infra/`, one state), one file per part of the architecture. The files from shared building blocks (`container-apps-environment.tf`, `key-vault.tf`, `monitoring.tf`, `main.tf`, `providers.tf`, …), the modules in `infra/modules/` and the hook steps in `infra/hooks/<event>/` stay as they are, so that their improvements can be merged in later. Put the sample's own resources in a new file of `infra/` (calling a module of `infra/modules/` where one fits), its settings as variables mapped in `infra/main.tfvars.json`, its outputs as azd values, and its steps in `infra/hooks/<event>/NN-<name>.sh`.
 - **Before every `azd provision`:** `azd provision --preview` (one plan for the whole root) and read it: only expected adds and changes, no unexpected destroy. Module tests: `terraform init -backend=false && terraform test` in `infra/modules/<module>`.
 
 ## Code humans can maintain

@@ -1,58 +1,86 @@
-# Reaching private Azure resources from your laptop
+<div align="center">
 
-**Question:** Can Azure Bastion Standard, created on demand and deleted automatically when its time is up, give a developer secure access from their laptop to private resources in a virtual network (private DNS, kubectl, azd deploy, private web apps and data services) at a low cost?
+# Private Azure resources from your laptop, with Bastion on demand
 
-**Time box:** 4 phases, stop and report after each · **Status:** in progress
+**Reach private endpoints, private web apps and private clusters in an Azure virtual network from your own terminal, editor and browser, through an Azure Bastion that exists only while you use it and deletes itself when its time is up.**
 
-## The setup
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
+[![IaC: Terraform](https://img.shields.io/badge/IaC-Terraform-623CE4?style=flat-square&logo=terraform)](infra)
+[![Deploy: azd](https://img.shields.io/badge/deploy-azd-0078D4?style=flat-square)](azure.yaml)
+[![Access: Azure Bastion](https://img.shields.io/badge/access-Azure%20Bastion-555555?style=flat-square)](docs/DECISIONS.md)
 
-TODO: what runs where, in a few sentences, and with which identities; then the diagram of the components (a
-`flowchart`, one arrow per call, labelled with the identity it uses).
+[**Why**](#why-this-sample) · [**How it works**](#how-it-works) · [**Daily use**](#daily-use) · [**Cost**](#cost) · [**Documentation**](#documentation)
+
+</div>
+
+> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); the base, the on-demand Bastion and the reaper are built and checked phase by phase ([verification](docs/verification.md)).
+
+## Why this sample
+
+Locking resources behind private endpoints is the easy part; working with them afterwards is not. Your laptop can't resolve `privatelink` names or reach private IP addresses, so `kubectl`, `azd deploy`, a database client or a browser stop working. A VPN gateway or an always-on Bastion solves it, at more than 100 € a month whether you use it or not. This sample keeps the access path cheap by creating it only when you need it, and makes sure it doesn't stay forgotten.
+
+## What it shows
+
+- **Azure Bastion Standard on demand:** created by a script for a working session, tagged with the time it must be deleted (`delete-after`), extended by a script if you need longer.
+- **Your own tools:** SSH with your Entra identity (no SSH key), tunnels, VS Code Remote-SSH to a jumpbox, and SSH forwarding to reach private services from the laptop.
+- **A reaper:** an Azure Function (Flex Consumption, .NET isolated) that checks every 15 minutes and deletes any Bastion host past its time, or without a time, then deallocates the jumpbox and removes the session's NAT Gateway.
+- **Private targets to try it on:** Key Vault behind a private endpoint, and a web app in an internal Container Apps environment.
+- **Least privilege:** the reaper's managed identity can delete Bastion hosts and the session's NAT Gateway, deallocate the jumpbox, and nothing else.
+
+## How it works
 
 ```mermaid
 flowchart LR
-    user(["User"]) --> client["TODO: client or agent"]
-    client -->|"TODO: identity"| service["TODO: what the spike examines"]
-    service --> dependency["TODO: what it calls"]
+    laptop["Your laptop: az CLI, ssh, VS Code, browser"] -->|"tunnel, signed in with Entra ID"| bastion["Azure Bastion Standard (on demand)"]
+    bastion -->|"SSH, Entra ID"| jumpbox["Jumpbox VM, no public IP"]
+    jumpbox -->|"private endpoint"| vault["Key Vault"]
+    jumpbox -->|"internal ingress"| webapp["Private web app (internal Container Apps)"]
+    jumpbox -->|"outbound, during sessions"| nat["NAT Gateway (on demand)"]
+    reaper["Reaper function, every 15 minutes"] -->|"deletes when delete-after has passed"| bastion
+    reaper -->|"deallocates"| jumpbox
+    reaper -->|"detaches and deletes"| nat
 ```
 
-## Key findings
+- **Permanent** (Terraform): the virtual network with its subnets, the Bastion's public IP, the jumpbox (deallocated between sessions), the private targets and the reaper.
+- **Per session** (scripts): the Bastion host and the NAT Gateway, created together and deleted together ([D2](docs/DECISIONS.md), [D6](docs/DECISIONS.md)).
 
-TODO: once the first experiments are done, one line per question (a table), and a diagram of the most important
-behaviour when it helps (a `sequenceDiagram`).
+## Daily use
 
-The answers to every question, with the evidence: **[docs/FINDINGS.md](docs/FINDINGS.md)**.
+Available from phase 2:
 
-## Documents
+```bash
+make bastion-up                 # creates the Bastion host and the NAT Gateway, starts the jumpbox; deleted 8 hours later
+make bastion-extend HOURS=2     # moves the delete-after time
+make bastion-ssh                # SSH to the jumpbox with your Entra identity
+make bastion-down               # deletes both now and deallocates the jumpbox
+```
+
+## Cost
+
+Retail prices, francecentral, November 2026, before measurement ([phase 4](docs/verification.md)):
+
+| Part | When it costs | Price |
+|---|---|---|
+| Azure Bastion Standard | only while a session's host exists | 0.2603 € an hour |
+| NAT Gateway | only during sessions | 0.0404 € an hour, plus 0.0404 € per GB |
+| Jumpbox (B2ats v2) | while running; its disk always | 0.0095 € an hour |
+| Private endpoint (Key Vault) | always | 0.009 € an hour |
+| Bastion public IP | always | 0.0045 € an hour |
+
+For comparison, the same Bastion always on costs about 190 € a month ([D2](docs/DECISIONS.md)).
+
+## Documentation
 
 | Document | Content |
 |---|---|
-| [Questions](docs/QUESTIONS.md) | What the spike must answer, and the status of each question |
-| [Experiments](docs/experiments/README.md) | One file per experiment, numbered |
-| [Findings](docs/FINDINGS.md) | The answers, with links to the evidence |
-| [Retest plan](docs/RETEST-PLAN.md) | What to run again when a product changes |
-| [Demo runbook](docs/DEMO-RUNBOOK.md) | How to show the results |
+| [Decisions](docs/DECISIONS.md) | Each design choice and why |
+| [Verification](docs/verification.md) | What was checked, how and when |
+| [AGENTS.md](AGENTS.md) | How the sample is built, for people and coding agents |
 
-## Environment
+## Clean up
 
-The infrastructure is one Terraform root (`infra/`), one file per part, built from the modules in `infra/modules/`. azd runs the steps of `infra/hooks/<event>/` around it (state backend before, configuration after, a clean teardown).
+`azd down --purge` deletes the resource group, including any Bastion host and NAT Gateway left.
 
-```bash
-az login && azd auth login
-azd env new access-dev --location francecentral
-azd env set RESOURCE_TAGS "key=value,key=value"   # tags your tenant's policies require, if any
-azd hooks run preprovision                        # remote state backend: once before the first preview
-azd provision --preview                           # read the plan
-azd up                                            # provision, then deploy the services
-```
+## License
 
-Later changes: `azd provision --preview`, read the plan, then `azd provision`.
-
-Tear it down when the spike ends: `azd down --purge`.
-
-## Run the experiments' code
-
-```bash
-uv sync
-uv run python src/<script>.py
-```
+[MIT](LICENSE)
