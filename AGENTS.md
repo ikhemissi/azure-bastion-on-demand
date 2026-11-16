@@ -40,5 +40,7 @@ Everything here must be maintainable by human developers, whoever (or whatever) 
 If `.fast-start/pitfalls.md` exists (local only, git-ignored: never commit, copy or quote it), read it before changing
 infrastructure or services: it lists pitfalls known for this kind of project.
 
-- None recorded yet.
+- A subscription may offer only some VM sizes in a region (no B-series on the test subscription): check `az vm list-skus -l <region>` before choosing one.
+- A container image pinned by digest must use a digest the registry resolves: take it from a pull (`podman pull`, then `podman image inspect`), not from a `HEAD` request with an index `Accept` header (the registry answered `MANIFEST_UNKNOWN`).
+- Some tenants add IP tags to new public IP addresses; Terraform then wants to replace them: `ignore_changes = [ip_tags]`.
 Add a pitfall here every time something bites you, in one line: the symptom, then what to do.

@@ -50,7 +50,7 @@ resource "azurerm_container_app" "private_web_app" {
     container {
       name = "hello"
       # Microsoft's Container Apps quickstart page, pinned by digest.
-      image  = "mcr.microsoft.com/k8se/quickstart@sha256:d278e30de23a1b5b5f4c987e830dbd915f9fafc1e2e574022eadf7e7ce1c05fb"
+      image  = "mcr.microsoft.com/k8se/quickstart@sha256:3a4d93c34c6753f24765ab17a36f1754aee9b02082b7d9553d17697b9e8252c4"
       cpu    = 0.25
       memory = "0.5Gi"
     }

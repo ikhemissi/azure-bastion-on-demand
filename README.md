@@ -13,7 +13,7 @@
 
 </div>
 
-> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); the base, the on-demand Bastion and the reaper are built and checked phase by phase ([verification](docs/verification.md)).
+> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phase 1 (the base: network, jumpbox, private targets) is deployed and checked; the on-demand Bastion and the reaper come next ([verification](docs/verification.md)).
 
 ## Why this sample
 
@@ -63,7 +63,7 @@ Retail prices, francecentral, November 2026, before measurement ([phase 4](docs/
 |---|---|---|
 | Azure Bastion Standard | only while a session's host exists | 0.2603 € an hour |
 | NAT Gateway | only during sessions | 0.0404 € an hour, plus 0.0404 € per GB |
-| Jumpbox (B2ats v2) | while running; its disk always | 0.0095 € an hour |
+| Jumpbox (D2als v7, [D7](docs/DECISIONS.md)) | while running; its disk always | 0.0847 € an hour |
 | Private endpoint (Key Vault) | always | 0.009 € an hour |
 | Bastion public IP | always | 0.0045 € an hour |
 

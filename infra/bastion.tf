@@ -9,6 +9,12 @@ resource "azurerm_public_ip" "bastion" {
   allocation_method   = "Static"
   sku                 = "Standard"
   tags                = local.tags
+
+  # Some tenants' policies add IP tags to new public IP addresses; they can only be set at creation, so a difference
+  # would replace the address.
+  lifecycle {
+    ignore_changes = [ip_tags]
+  }
 }
 
 output "BASTION_NAME" { value = "bas-${var.environment_name}" }
