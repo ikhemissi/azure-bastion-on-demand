@@ -89,7 +89,7 @@ variable "app_settings" {
 }
 
 variable "application_insights_connection_string" {
-  description = "Telemetry with Entra authentication; give the identity Monitoring Metrics Publisher on the resource too (role_assignments). Null: no telemetry."
+  description = "Telemetry with Entra authentication; give the identity Monitoring Metrics Publisher on the resource too (role_assignments). A .NET isolated worker also passes the credential to its exporter in code (knowledge: functions-worker-exporter-needs-entra-credential). Null: no telemetry."
   type        = string
   default     = null
   sensitive   = true
