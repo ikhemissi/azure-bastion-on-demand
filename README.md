@@ -15,7 +15,7 @@
 
 > **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phases 1 to 3 (the base, sessions on demand from the laptop, and the reaper) are deployed and checked; measured costs come next ([verification](docs/verification.md)).
 
-![Private Azure resources from your laptop: a script creates an Azure Bastion host tagged with its end time; the laptop's terminal, VS Code and browser reach a jumpbox without a public IP through the Bastion's tunnel with Entra ID, and from there Key Vault's private endpoint and a private web app; every 15 minutes a reaper function deletes the host when its time has passed, detaches and deletes the session's NAT Gateway and deallocates the jumpbox](docs/overview.svg)
+![Private Azure resources from your laptop: a script creates an Azure Bastion host tagged with its end time; the laptop's terminal, VS Code and browser reach a jumpbox without a public IP through the Bastion's tunnel with Entra ID, and from there your private resources, in its subnets or a peered virtual network; every 15 minutes a reaper function deletes the host when its time has passed, detaches and deletes the session's NAT Gateway and deallocates the jumpbox](docs/overview.svg)
 
 ## Why this sample
 
@@ -26,7 +26,7 @@ Locking resources behind private endpoints is the easy part; working with them a
 - **Azure Bastion Standard on demand:** created by a script for a working session, tagged with the time it must be deleted (`delete-after`), extended by a script if you need longer.
 - **Your own tools:** SSH with your Entra identity (no SSH key), tunnels, VS Code Remote-SSH to a jumpbox, and SSH forwarding to reach private services from the laptop.
 - **A reaper:** an Azure Function (Flex Consumption, .NET isolated) that checks every 15 minutes and deletes any Bastion host past its time, or without a time, then deallocates the jumpbox and removes the session's NAT Gateway.
-- **Private targets to try it on:** Key Vault behind a private endpoint, and a web app in an internal Container Apps environment.
+- **Your private resources:** in the sample's network or in a peered one ([peering guide](docs/peering.md)). To try it without any, the sample can deploy two targets (`DEPLOY_SAMPLE_TARGETS=true`, off by default): Key Vault behind a private endpoint and a web app in an internal Container Apps environment. Neither is needed by the access path, which keeps no secrets ([D12](docs/DECISIONS.md)).
 - **Least privilege:** the reaper's managed identity can delete Bastion hosts and NAT Gateways, detach a NAT Gateway from the jumpbox subnet, deallocate the jumpbox, and nothing else ([D10](docs/DECISIONS.md)).
 
 ## How it works
@@ -35,19 +35,30 @@ Locking resources behind private endpoints is the easy part; working with them a
 flowchart LR
     laptop["Your laptop: az CLI, ssh, VS Code, browser"] -->|"tunnel, signed in with Entra ID"| bastion["Azure Bastion Standard (on demand)"]
     bastion -->|"SSH, Entra ID"| jumpbox["Jumpbox VM, no public IP"]
-    jumpbox -->|"private endpoint"| vault["Key Vault"]
-    jumpbox -->|"internal ingress"| webapp["Private web app (internal Container Apps)"]
+    jumpbox -->|"private endpoints, internal apps"| yours["Your private resources: another subnet or a peered virtual network"]
     jumpbox -->|"outbound, during sessions"| nat["NAT Gateway (on demand)"]
     reaper["Reaper function, every 15 minutes"] -->|"deletes when delete-after has passed"| bastion
     reaper -->|"deallocates"| jumpbox
     reaper -->|"detaches and deletes"| nat
 ```
 
-- **Permanent** (Terraform): the virtual network with its subnets, the Bastion's public IP, the jumpbox (deallocated between sessions), the private targets and the reaper.
+- **Permanent** (Terraform): the virtual network with its subnets, the Bastion's public IP, the jumpbox (deallocated between sessions) and the reaper; the sample targets if you turn them on.
 - **Per session** (scripts): the Bastion host and the NAT Gateway, created together and deleted together ([D2](docs/DECISIONS.md), [D6](docs/DECISIONS.md)).
 
-## Daily use
+## Deploy
 
+```bash
+azd env new bastion-dev --location francecentral
+azd env set RESOURCE_TAGS "key=value,key=value"   # tags your tenant's policies require, if any
+azd env set DEPLOY_SAMPLE_TARGETS true             # optional: Key Vault and a private web app to try sessions on
+azd hooks run preprovision                         # the Terraform state backend
+azd provision --preview                            # read the plan
+azd up                                             # the network, the jumpbox and the reaper; no Bastion yet
+```
+
+Other settings: `JUMPBOX_SIZE` ([D7](docs/DECISIONS.md)), `JUMPBOX_LOGIN_OBJECT_IDS` (who else may sign in to the jumpbox), `REAPER_DEALLOCATES_JUMPBOX` ([D11](docs/DECISIONS.md)). To reach resources in an existing virtual network, peer it: [docs/peering.md](docs/peering.md).
+
+## Daily use
 
 ```bash
 make bastion-up                 # creates the Bastion host and the NAT Gateway, starts the jumpbox; deleted 8 hours later
@@ -71,8 +82,8 @@ Retail prices, francecentral, November 2026, before measurement ([phase 4](docs/
 | Azure Bastion Standard | only while a session's host exists | 0.2603 € an hour |
 | NAT Gateway | only during sessions | 0.0404 € an hour, plus 0.0404 € per GB |
 | Jumpbox (D2als v7, [D7](docs/DECISIONS.md)) | while running; its disk always | 0.0847 € an hour |
-| Private endpoint (Key Vault) | always | 0.009 € an hour |
-| Bastion public IP | always | 0.0045 € an hour |
+| Bastion and NAT Gateway public IPs | always | 0.0045 € an hour each |
+| Sample targets' private endpoint (Key Vault) | only with `DEPLOY_SAMPLE_TARGETS` | 0.009 € an hour |
 
 For comparison, the same Bastion always on costs about 190 € a month ([D2](docs/DECISIONS.md)).
 
@@ -82,6 +93,7 @@ For comparison, the same Bastion always on costs about 190 € a month ([D2](doc
 |---|---|
 | [Decisions](docs/DECISIONS.md) | Each design choice and why |
 | [Verification](docs/verification.md) | What was checked, how and when |
+| [Peering](docs/peering.md) | Reaching private resources in another virtual network |
 | [AGENTS.md](AGENTS.md) | How the sample is built, for people and coding agents |
 
 ## Clean up

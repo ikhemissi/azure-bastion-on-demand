@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
   <title id="title">Private Azure resources from your laptop, with Bastion on demand</title>
-  <desc id="desc">From the laptop, a script creates an Azure Bastion Standard host tagged with the time it must be deleted, and the laptop's terminal, VS Code and browser reach a jumpbox through the Bastion's tunnel with Entra ID. The jumpbox, without a public IP, reaches Key Vault through its private endpoint and a private web app in an internal Container Apps environment, and goes out through a NAT Gateway created for the session. Every 15 minutes, a reaper function deletes a Bastion host whose time has passed or that has no time, detaches and deletes the NAT Gateway, and deallocates the jumpbox.</desc>
+  <desc id="desc">From the laptop, a script creates an Azure Bastion Standard host tagged with the time it must be deleted, and the laptop's terminal, VS Code and browser reach a jumpbox through the Bastion's tunnel with Entra ID. The jumpbox, without a public IP, reaches your private resources (private endpoints, internal apps and APIs) in another subnet or a peered virtual network, and goes out through a NAT Gateway created for the session. Every 15 minutes, a reaper function deletes a Bastion host whose time has passed or that has no time, detaches and deletes the NAT Gateway, and deallocates the jumpbox.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
       <path d="M0,0 L10,5 L0,10 z" fill="#3d4466"/>
@@ -51,11 +51,11 @@
 
   <!-- Resource group -->
   <rect x="320" y="130" width="840" height="470" rx="14" fill="#eef3fb" stroke="#0b5cad" stroke-width="1.5"/>
-  <text class="group" x="340" y="156">Azure resource group</text>
+  <text class="group" x="340" y="156">Azure</text>
 
   <!-- Virtual network -->
-  <rect x="345" y="168" width="575" height="412" rx="12" fill="#ffffff" stroke="#8fa8cf" stroke-width="1.2"/>
-  <text class="kind" x="362" y="190">Virtual network</text>
+  <rect x="345" y="168" width="295" height="412" rx="12" fill="#ffffff" stroke="#8fa8cf" stroke-width="1.2"/>
+  <text class="kind" x="362" y="190">Sample virtual network</text>
 
   <!-- Bastion (on demand) -->
   <rect x="380" y="210" width="220" height="80" rx="10" fill="#f4f2ff" stroke="#5b4fd6" stroke-width="1.8" stroke-dasharray="7 5"/>
@@ -75,15 +75,17 @@
   <text class="name" x="490" y="527" text-anchor="middle">NAT Gateway</text>
   <text class="kind" x="490" y="548" text-anchor="middle">the jumpbox's way out</text>
 
-  <!-- Private targets -->
-  <g filter="url(#shadow)">
-    <rect x="690" y="215" width="205" height="70" rx="10" fill="#ffffff" stroke="#3d4466" stroke-width="1.5"/>
-    <rect x="690" y="305" width="205" height="70" rx="10" fill="#ffffff" stroke="#3d4466" stroke-width="1.5"/>
-  </g>
-  <text class="name" x="792" y="245" text-anchor="middle">Key Vault</text>
-  <text class="kind" x="792" y="267" text-anchor="middle">private endpoint only</text>
-  <text class="name" x="792" y="335" text-anchor="middle">Private web app</text>
-  <text class="kind" x="792" y="357" text-anchor="middle">internal Container Apps</text>
+  <!-- Your private resources -->
+  <rect x="660" y="200" width="265" height="200" rx="12" fill="#ffffff" stroke="#0b5cad" stroke-width="1.5"/>
+  <text class="name" x="792" y="226" text-anchor="middle">Your private resources</text>
+  <text class="kind" x="792" y="246" text-anchor="middle">another subnet or a peered VNet</text>
+  <rect x="677" y="258" width="230" height="52" rx="10" fill="#f7f8fc" stroke="#c9cde3"/>
+  <text class="item" x="792" y="280" text-anchor="middle">Private endpoints</text>
+  <text class="kind" x="792" y="299" text-anchor="middle">storage, databases, registries</text>
+  <rect x="677" y="318" width="230" height="52" rx="10" fill="#f7f8fc" stroke="#c9cde3"/>
+  <text class="item" x="792" y="340" text-anchor="middle">Internal apps and APIs</text>
+  <text class="kind" x="792" y="359" text-anchor="middle">web apps, private AKS API</text>
+  <text class="kind" x="792" y="389" text-anchor="middle" style="font-size: 12px">optional sample: Key Vault, a web app</text>
 
   <!-- Reaper -->
   <g filter="url(#shadow)">
@@ -103,10 +105,8 @@
   <line x1="490" y1="290" x2="490" y2="346" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
   <text class="edge" x="500" y="323">SSH, Entra ID</text>
 
-  <!-- Jumpbox to targets -->
-  <line x1="600" y1="370" x2="686" y2="262" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
-  <line x1="600" y1="385" x2="686" y2="350" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
-  <text class="edge" x="622" y="398">HTTPS</text>
+  <!-- Jumpbox to your resources -->
+  <line x1="600" y1="385" x2="656" y2="345" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
 
   <!-- Jumpbox to NAT -->
   <line x1="490" y1="440" x2="490" y2="496" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
