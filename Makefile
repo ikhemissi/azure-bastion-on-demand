@@ -3,7 +3,7 @@
 HOURS ?= 8
 PORT ?= 2222
 
-.PHONY: bastion-up bastion-extend bastion-down bastion-ssh bastion-tunnel lint
+.PHONY: bastion-up bastion-extend bastion-down bastion-ssh bastion-tunnel test lint
 
 bastion-up:  ## open a session that ends after HOURS (default 8)
 	scripts/bastion-up.sh $(HOURS)
@@ -19,6 +19,11 @@ bastion-ssh:  ## SSH to the jumpbox with your Entra identity
 
 bastion-tunnel:  ## the jumpbox's SSH on localhost:PORT, with an Entra certificate in .ssh/config
 	scripts/bastion-tunnel.sh $(PORT)
+
+test:  ## the reaper's unit tests, and Terraform's format and module tests (offline)
+	dotnet test BastionReaper.slnx
+	terraform -chdir=infra fmt -check -recursive
+	for module in infra/modules/*/; do terraform -chdir=$$module init -backend=false -input=false >/dev/null && terraform -chdir=$$module test || exit 1; done
 
 lint:  ## shellcheck
 	shellcheck -x scripts/*.sh jumpbox/*.sh infra/hooks/*/*.sh

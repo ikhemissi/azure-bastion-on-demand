@@ -14,3 +14,7 @@ __pycache__/
 
 # SSH key, Entra certificate and configuration written by scripts/bastion-tunnel.sh
 .ssh/
+
+# .NET build output
+bin/
+obj/

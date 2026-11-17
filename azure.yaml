@@ -7,6 +7,13 @@ infra:
   provider: terraform
   path: infra
 
+# The reaper (src/BastionReaper): a Flex Consumption function app, created by infra/reaper.tf.
+services:
+  reaper:
+    project: ./src/BastionReaper
+    language: dotnet
+    host: function
+
 # Each event runs the steps of infra/hooks/<event>/ in name order (infra/hooks/run.sh): what Terraform cannot do.
 hooks:
   preprovision:

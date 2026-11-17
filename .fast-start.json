@@ -14,7 +14,9 @@
     "monitoring",
     "container-apps-environment",
     "key-vault",
-    "network"
+    "network",
+    "function-app-flex",
+    "storage-account"
   ],
   "answers": {
     "project_name": "azure-bastion-on-demand",
