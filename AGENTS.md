@@ -46,4 +46,9 @@ infrastructure or services: it lists pitfalls known for this kind of project.
 - `az network bastion ssh` failing with `No module named 'rpds.rpds'`: the laptop's `bastion` or `ssh` CLI extension no longer loads after a CLI upgrade; `az extension remove -n <name> && az extension add -n <name>`.
 - `az network bastion delete` asks for confirmation and, without a terminal, cancels ("Operation cancelled"): pass `--yes`.
 - `az vm run-command` keeps running on the VM after the local command is stopped, and starts scripts without `$HOME`.
+- A subnet write refused with 403 `LinkedAuthorizationFailed`: the identity also needs `Microsoft.Network/networkSecurityGroups/join/action` on the subnet's network security group (and on any other resource the subnet links to).
+- Detaching a NAT Gateway with the .NET SDK: setting `SubnetData.NatGatewayId = null` still sends `"natGateway": {}`, refused with 400 `MissingJsonReferenceId`; write the subnet without the property (`SubnetWithoutNatGateway`).
+- The function's own logs missing from Application Insights while the host's arrive: the worker's Azure Monitor exporter needs the credential (`UseAzureMonitorExporter(options => options.Credential = …)`) when Application Insights accepts only Entra-authenticated telemetry.
+- `azd provision --preview` failing with 403 on the Terraform state account: the preview doesn't run the preprovision hook that re-applies the account's tags and public access; run `azd hooks run preprovision` first.
+- VS Code on Windows with WSL's `ssh` as `remote.SSH.path`: the connection hangs on "Waiting for port forwarding" (`ECONNREFUSED` on the dynamic forward); use Windows' own OpenSSH.
 Add a pitfall here every time something bites you, in one line: the symptom, then what to do.

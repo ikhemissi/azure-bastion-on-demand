@@ -13,7 +13,7 @@
 
 </div>
 
-> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phases 1 and 2 (the base, and sessions on demand from the laptop) are deployed and checked; the reaper comes next ([verification](docs/verification.md)).
+> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phases 1 to 3 (the base, sessions on demand from the laptop, and the reaper) are deployed and checked; measured costs come next ([verification](docs/verification.md)).
 
 ## Why this sample
 
@@ -25,7 +25,7 @@ Locking resources behind private endpoints is the easy part; working with them a
 - **Your own tools:** SSH with your Entra identity (no SSH key), tunnels, VS Code Remote-SSH to a jumpbox, and SSH forwarding to reach private services from the laptop.
 - **A reaper:** an Azure Function (Flex Consumption, .NET isolated) that checks every 15 minutes and deletes any Bastion host past its time, or without a time, then deallocates the jumpbox and removes the session's NAT Gateway.
 - **Private targets to try it on:** Key Vault behind a private endpoint, and a web app in an internal Container Apps environment.
-- **Least privilege:** the reaper's managed identity can delete Bastion hosts and the session's NAT Gateway, deallocate the jumpbox, and nothing else.
+- **Least privilege:** the reaper's managed identity can delete Bastion hosts and NAT Gateways, detach a NAT Gateway from the jumpbox subnet, deallocate the jumpbox, and nothing else ([D10](docs/DECISIONS.md)).
 
 ## How it works
 
@@ -53,6 +53,12 @@ make bastion-extend HOURS=2     # moves the delete-after time
 make bastion-ssh                # SSH to the jumpbox with your Entra identity
 make bastion-down               # deletes both now and deallocates the jumpbox
 ```
+
+To reach private services, open the tunnel (`make bastion-tunnel`), then forward through the jumpbox: `ssh -F .ssh/config -N -D 1080 jumpbox` gives a SOCKS proxy on `127.0.0.1:1080` for a browser, `curl --socks5-hostname`, the Azure CLI (`HTTPS_PROXY=socks5h://127.0.0.1:1080`) or `kubectl` (`proxy-url` in the kubeconfig). Private names are resolved on the jumpbox ([verification](docs/verification.md) V5, V6).
+
+From Windows with the scripts in WSL: the tunnel's and the proxy's ports reach Windows, so a browser can use the proxy (for example Edge with its own profile and `--proxy-server=socks5://127.0.0.1:1080`). For VS Code Remote-SSH from Windows, use Windows' own OpenSSH with a copy of `.ssh/id_entra` and its certificate (valid about an hour), not WSL's `ssh`.
+
+The reaper runs every 15 minutes in any case; `make test` runs its unit tests and the Terraform module tests.
 
 ## Cost
 
