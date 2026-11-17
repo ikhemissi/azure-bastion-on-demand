@@ -1,0 +1,125 @@
+<svg xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif" width="1200" height="675" viewBox="0 0 1200 675" role="img" aria-labelledby="title desc">
+  <title id="title">Private Azure resources from your laptop, with Bastion on demand</title>
+  <desc id="desc">From the laptop, a script creates an Azure Bastion Standard host tagged with the time it must be deleted, and the laptop's terminal, VS Code and browser reach a jumpbox through the Bastion's tunnel with Entra ID. The jumpbox, without a public IP, reaches Key Vault through its private endpoint and a private web app in an internal Container Apps environment, and goes out through a NAT Gateway created for the session. Every 15 minutes, a reaper function deletes a Bastion host whose time has passed or that has no time, detaches and deletes the NAT Gateway, and deallocates the jumpbox.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3d4466"/>
+    </marker>
+    <marker id="arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#138a7a"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#1b1f3b" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <style>
+    text { fill: #1b1f3b; }
+    .title { font-size: 34px; font-weight: 700; }
+    .subtitle { font-size: 18px; fill: #4a5072; }
+    .name { font-size: 18px; font-weight: 700; }
+    .group { font-size: 16px; font-weight: 700; fill: #0b5cad; }
+    .kind { font-size: 14px; fill: #4a5072; }
+    .item { font-size: 15px; font-weight: 700; }
+    .edge { font-size: 13px; fill: #3d4466; font-weight: 600; }
+    .reaper { font-size: 13px; fill: #138a7a; font-weight: 600; }
+    .footer { font-size: 14px; fill: #4a5072; }
+  </style>
+
+  <rect width="1200" height="675" fill="#f7f8fc"/>
+
+  <text class="title" x="48" y="66">Private Azure resources from your laptop</text>
+  <text class="subtitle" x="48" y="98">An Azure Bastion that exists only while you work, and a function that deletes it when its time is up.</text>
+
+  <!-- Laptop -->
+  <g filter="url(#shadow)">
+    <rect x="40" y="150" width="230" height="410" rx="12" fill="#ffffff" stroke="#3d4466" stroke-width="1.5"/>
+  </g>
+  <text class="name" x="155" y="184" text-anchor="middle">Your laptop</text>
+  <text class="kind" x="155" y="205" text-anchor="middle">your own tools, Entra ID</text>
+  <rect x="55" y="222" width="200" height="62" rx="10" fill="#f7f8fc" stroke="#c9cde3"/>
+  <text class="item" x="155" y="248" text-anchor="middle">Terminal</text>
+  <text class="kind" x="155" y="269" text-anchor="middle">az CLI, ssh, scp</text>
+  <rect x="55" y="300" width="200" height="62" rx="10" fill="#f7f8fc" stroke="#c9cde3"/>
+  <text class="item" x="155" y="326" text-anchor="middle">VS Code</text>
+  <text class="kind" x="155" y="347" text-anchor="middle">Remote-SSH over the tunnel</text>
+  <rect x="55" y="378" width="200" height="62" rx="10" fill="#f7f8fc" stroke="#c9cde3"/>
+  <text class="item" x="155" y="404" text-anchor="middle">Browser, kubectl</text>
+  <text class="kind" x="155" y="425" text-anchor="middle">SOCKS proxy (ssh -D)</text>
+  <text class="item" x="155" y="482" text-anchor="middle">make bastion-up</text>
+  <text class="kind" x="155" y="503" text-anchor="middle">bastion-extend, bastion-down</text>
+  <text class="kind" x="155" y="524" text-anchor="middle">default end: 8 hours later</text>
+
+  <!-- Resource group -->
+  <rect x="320" y="130" width="840" height="470" rx="14" fill="#eef3fb" stroke="#0b5cad" stroke-width="1.5"/>
+  <text class="group" x="340" y="156">Azure resource group</text>
+
+  <!-- Virtual network -->
+  <rect x="345" y="168" width="575" height="412" rx="12" fill="#ffffff" stroke="#8fa8cf" stroke-width="1.2"/>
+  <text class="kind" x="362" y="190">Virtual network</text>
+
+  <!-- Bastion (on demand) -->
+  <rect x="380" y="210" width="220" height="80" rx="10" fill="#f4f2ff" stroke="#5b4fd6" stroke-width="1.8" stroke-dasharray="7 5"/>
+  <text class="name" x="490" y="242" text-anchor="middle">Azure Bastion</text>
+  <text class="kind" x="490" y="264" text-anchor="middle">Standard, tag delete-after</text>
+
+  <!-- Jumpbox -->
+  <g filter="url(#shadow)">
+    <rect x="380" y="350" width="220" height="90" rx="10" fill="#ffffff" stroke="#3d4466" stroke-width="1.5"/>
+  </g>
+  <text class="name" x="490" y="384" text-anchor="middle">Jumpbox VM</text>
+  <text class="kind" x="490" y="406" text-anchor="middle">no public IP, Entra ID SSH</text>
+  <text class="kind" x="490" y="426" text-anchor="middle">deallocated between sessions</text>
+
+  <!-- NAT Gateway (on demand) -->
+  <rect x="380" y="500" width="220" height="62" rx="10" fill="#f4f2ff" stroke="#5b4fd6" stroke-width="1.8" stroke-dasharray="7 5"/>
+  <text class="name" x="490" y="527" text-anchor="middle">NAT Gateway</text>
+  <text class="kind" x="490" y="548" text-anchor="middle">the jumpbox's way out</text>
+
+  <!-- Private targets -->
+  <g filter="url(#shadow)">
+    <rect x="690" y="215" width="205" height="70" rx="10" fill="#ffffff" stroke="#3d4466" stroke-width="1.5"/>
+    <rect x="690" y="305" width="205" height="70" rx="10" fill="#ffffff" stroke="#3d4466" stroke-width="1.5"/>
+  </g>
+  <text class="name" x="792" y="245" text-anchor="middle">Key Vault</text>
+  <text class="kind" x="792" y="267" text-anchor="middle">private endpoint only</text>
+  <text class="name" x="792" y="335" text-anchor="middle">Private web app</text>
+  <text class="kind" x="792" y="357" text-anchor="middle">internal Container Apps</text>
+
+  <!-- Reaper -->
+  <g filter="url(#shadow)">
+    <rect x="950" y="395" width="190" height="110" rx="10" fill="#ffffff" stroke="#138a7a" stroke-width="1.8"/>
+  </g>
+  <text class="name" x="1045" y="428" text-anchor="middle">Reaper function</text>
+  <text class="kind" x="1045" y="450" text-anchor="middle">Flex Consumption, .NET</text>
+  <text class="kind" x="1045" y="471" text-anchor="middle">every 15 minutes</text>
+  <text class="kind" x="1045" y="492" text-anchor="middle">least-privilege roles</text>
+
+  <!-- Laptop to Bastion -->
+  <line x1="270" y1="250" x2="376" y2="250" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
+  <text class="edge" x="323" y="238" text-anchor="middle">creates,</text>
+  <text class="edge" x="323" y="272" text-anchor="middle">tunnels</text>
+
+  <!-- Bastion to jumpbox -->
+  <line x1="490" y1="290" x2="490" y2="346" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
+  <text class="edge" x="500" y="323">SSH, Entra ID</text>
+
+  <!-- Jumpbox to targets -->
+  <line x1="600" y1="370" x2="686" y2="262" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
+  <line x1="600" y1="385" x2="686" y2="350" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
+  <text class="edge" x="622" y="398">HTTPS</text>
+
+  <!-- Jumpbox to NAT -->
+  <line x1="490" y1="440" x2="490" y2="496" stroke="#3d4466" stroke-width="2" marker-end="url(#arrow)"/>
+  <text class="edge" x="500" y="473">outbound</text>
+
+  <!-- Reaper actions -->
+  <path d="M1045,395 V156 H560 V206" fill="none" stroke="#138a7a" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <text class="reaper" x="820" y="149" text-anchor="middle">deletes it when its time has passed, or it has none</text>
+  <line x1="950" y1="425" x2="604" y2="425" stroke="#138a7a" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <text class="reaper" x="775" y="417" text-anchor="middle">deallocates</text>
+  <path d="M950,490 H780 V531 H604" fill="none" stroke="#138a7a" stroke-width="2" marker-end="url(#arrow-teal)"/>
+  <text class="reaper" x="690" y="523" text-anchor="middle">detaches, deletes</text>
+
+  <text class="footer" x="48" y="632">Dashed: exists only during a session (created by make bastion-up, deleted by bastion-down or the reaper).</text>
+  <text class="footer" x="48" y="655">A session costs about 0.39 € an hour (Bastion, NAT Gateway and jumpbox, retail, francecentral, November 2026).</text>
+</svg>

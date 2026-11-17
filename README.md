@@ -15,6 +15,8 @@
 
 > **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phases 1 to 3 (the base, sessions on demand from the laptop, and the reaper) are deployed and checked; measured costs come next ([verification](docs/verification.md)).
 
+![Private Azure resources from your laptop: a script creates an Azure Bastion host tagged with its end time; the laptop's terminal, VS Code and browser reach a jumpbox without a public IP through the Bastion's tunnel with Entra ID, and from there Key Vault's private endpoint and a private web app; every 15 minutes a reaper function deletes the host when its time has passed, detaches and deletes the session's NAT Gateway and deallocates the jumpbox](docs/overview.svg)
+
 ## Why this sample
 
 Locking resources behind private endpoints is the easy part; working with them afterwards is not. Your laptop can't resolve `privatelink` names or reach private IP addresses, so `kubectl`, `azd deploy`, a database client or a browser stop working. A VPN gateway or an always-on Bastion solves it, at more than 100 € a month whether you use it or not. This sample keeps the access path cheap by creating it only when you need it, and makes sure it doesn't stay forgotten.
