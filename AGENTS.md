@@ -50,5 +50,6 @@ infrastructure or services: it lists pitfalls known for this kind of project.
 - Detaching a NAT Gateway with the .NET SDK: setting `SubnetData.NatGatewayId = null` still sends `"natGateway": {}`, refused with 400 `MissingJsonReferenceId`; write the subnet without the property (`SubnetWithoutNatGateway`).
 - The function's own logs missing from Application Insights while the host's arrive: the worker's Azure Monitor exporter needs the credential (`UseAzureMonitorExporter(options => options.Credential = …)`) when Application Insights accepts only Entra-authenticated telemetry.
 - `azd provision --preview` failing with 403 on the Terraform state account: the preview doesn't run the preprovision hook that re-applies the account's tags and public access; run `azd hooks run preprovision` first.
+- Linking a private DNS zone to a network that already links a zone of the same name: refused ("cannot be linked to multiple zones with overlapping namespaces"); keep the sample targets off when you link your own `privatelink` zones.
 - VS Code on Windows with WSL's `ssh` as `remote.SSH.path`: the connection hangs on "Waiting for port forwarding" (`ECONNREFUSED` on the dynamic forward); use Windows' own OpenSSH.
 Add a pitfall here every time something bites you, in one line: the symptom, then what to do.

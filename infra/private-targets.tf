@@ -1,8 +1,45 @@
-# What a session reaches, both reachable from the virtual network only: Key Vault behind a private endpoint, with
-# public network access off (a data service), and a web app in an internal Container Apps environment, whose names
-# resolve through a private DNS zone (a private web app). docs/DECISIONS.md D5.
+# Optional sample targets, to try a session on (DEPLOY_SAMPLE_TARGETS, off by default; docs/DECISIONS.md D5, D12): Key
+# Vault behind a private endpoint, with public network access off (a data service), and a web app in an internal
+# Container Apps environment, whose names resolve through a private DNS zone (a private web app). Neither is needed by
+# the Bastion or the jumpbox; your own private resources take their place (docs/peering.md).
+
+variable "deploy_sample_targets" {
+  description = "Whether to deploy the sample targets: Key Vault and a private web app (DEPLOY_SAMPLE_TARGETS)."
+  type        = bool
+}
+
+locals {
+  sample_targets = var.deploy_sample_targets ? 1 : 0
+}
+
+# Kept from before the targets became optional, so that existing deployments keep them in place.
+moved {
+  from = module.key_vault
+  to   = module.key_vault[0]
+}
+moved {
+  from = module.container_apps_environment
+  to   = module.container_apps_environment[0]
+}
+moved {
+  from = azurerm_container_app.private_web_app
+  to   = azurerm_container_app.private_web_app[0]
+}
+moved {
+  from = azurerm_private_dns_zone.container_apps
+  to   = azurerm_private_dns_zone.container_apps[0]
+}
+moved {
+  from = azurerm_private_dns_a_record.container_apps_wildcard
+  to   = azurerm_private_dns_a_record.container_apps_wildcard[0]
+}
+moved {
+  from = azurerm_private_dns_zone_virtual_network_link.container_apps
+  to   = azurerm_private_dns_zone_virtual_network_link.container_apps[0]
+}
 
 module "key_vault" {
+  count                         = local.sample_targets
   source                        = "./modules/key-vault"
   name                          = "kv-${substr(var.environment_name, 0, 10)}-${local.token}"
   resource_group_name           = azurerm_resource_group.main.name
@@ -14,6 +51,7 @@ module "key_vault" {
 }
 
 module "container_apps_environment" {
+  count                      = local.sample_targets
   source                     = "./modules/container-apps-environment"
   name                       = "cae-${var.environment_name}-${local.token}"
   resource_group_name        = azurerm_resource_group.main.name
@@ -25,9 +63,10 @@ module "container_apps_environment" {
 }
 
 resource "azurerm_container_app" "private_web_app" {
+  count                        = local.sample_targets
   name                         = "ca-hello-${var.environment_name}"
   resource_group_name          = azurerm_resource_group.main.name
-  container_app_environment_id = module.container_apps_environment.id
+  container_app_environment_id = module.container_apps_environment[0].id
   revision_mode                = "Single"
   workload_profile_name        = "Consumption"
   tags                         = local.tags
@@ -59,27 +98,33 @@ resource "azurerm_container_app" "private_web_app" {
 
 # The internal environment's apps are <app>.<default domain>, at the environment's static IP, in no public DNS.
 resource "azurerm_private_dns_zone" "container_apps" {
-  name                = module.container_apps_environment.default_domain
+  count               = local.sample_targets
+  name                = module.container_apps_environment[0].default_domain
   resource_group_name = azurerm_resource_group.main.name
   tags                = local.tags
 }
 
 resource "azurerm_private_dns_a_record" "container_apps_wildcard" {
+  count               = local.sample_targets
   name                = "*"
-  zone_name           = azurerm_private_dns_zone.container_apps.name
+  zone_name           = azurerm_private_dns_zone.container_apps[0].name
   resource_group_name = azurerm_resource_group.main.name
   ttl                 = 300
-  records             = [module.container_apps_environment.static_ip_address]
+  records             = [module.container_apps_environment[0].static_ip_address]
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "container_apps" {
+  count                 = local.sample_targets
   name                  = "container-apps"
   resource_group_name   = azurerm_resource_group.main.name
-  private_dns_zone_name = azurerm_private_dns_zone.container_apps.name
+  private_dns_zone_name = azurerm_private_dns_zone.container_apps[0].name
   virtual_network_id    = module.network.virtual_network_id
   tags                  = local.tags
 }
 
-output "KEY_VAULT_NAME" { value = module.key_vault.name }
-output "KEY_VAULT_URI" { value = module.key_vault.uri }
-output "PRIVATE_WEB_APP_URL" { value = "https://${azurerm_container_app.private_web_app.ingress[0].fqdn}" }
+# Empty when the sample targets are off.
+output "KEY_VAULT_NAME" { value = var.deploy_sample_targets ? module.key_vault[0].name : "" }
+output "KEY_VAULT_URI" { value = var.deploy_sample_targets ? module.key_vault[0].uri : "" }
+output "PRIVATE_WEB_APP_URL" {
+  value = var.deploy_sample_targets ? "https://${azurerm_container_app.private_web_app[0].ingress[0].fqdn}" : ""
+}
