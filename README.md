@@ -13,7 +13,7 @@
 
 </div>
 
-> **Status:** in progress (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); phases 1 to 3 (the base, sessions on demand from the laptop, and the reaper) are deployed and checked; measured costs come next ([verification](docs/verification.md)).
+> **Status:** done (November 2026). The design is settled ([decisions](docs/DECISIONS.md)); the base, sessions on demand from the laptop, the reaper and the measured costs are deployed and checked ([verification](docs/verification.md)).
 
 ![Private Azure resources from your laptop: a script creates an Azure Bastion host tagged with its end time; the laptop's terminal, VS Code and browser reach a jumpbox without a public IP through the Bastion's tunnel with Entra ID, and from there your private resources, in its subnets or a peered virtual network; every 15 minutes a reaper function deletes the host when its time has passed, detaches and deletes the session's NAT Gateway and deallocates the jumpbox](docs/overview.svg)
 
@@ -86,6 +86,8 @@ Retail prices, francecentral, November 2026, before measurement ([phase 4](docs/
 | Sample targets' private endpoint (Key Vault) | only with `DEPLOY_SAMPLE_TARGETS` | 0.009 € an hour |
 
 For comparison, the same Bastion always on costs about 190 € a month ([D2](docs/DECISIONS.md)).
+
+**Measured** (Cost Management, November 2026, [V9](docs/verification.md)): an idle day cost about $0.40 without the sample targets (the two public IPs, the jumpbox's disk, logs and the reaper), $0.65 with them; a one-hour session added about $0.31 for the Bastion host and its NAT Gateway, plus the jumpbox while it runs. A Defender for Storage plan on the subscription adds its own charge for the reaper's storage account.
 
 ## Documentation
 
